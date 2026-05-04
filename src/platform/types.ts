@@ -62,6 +62,7 @@ export interface WindowChromeAdapter {
 export interface StealthUaAdapter {
   getUserAgent(chromeVersion?: string): string;
   getClientHintsPlatform(): string;
+  getProfile(chromeVersion?: string): StealthUaProfile;
 }
 
 export interface SecretsAdapter {
@@ -80,4 +81,34 @@ export interface PlatformAdapter {
   windowChrome: WindowChromeAdapter;
   stealthUa: StealthUaAdapter;
   secrets: SecretsAdapter;
+}
+
+export interface StealthUaBrandVersion {
+  brand: string;
+  version: string;
+}
+
+export interface StealthUaClientHints {
+  brands: StealthUaBrandVersion[];
+  mobile: false;
+  platform: string;
+  platformVersion: string;
+  architecture: string;
+  bitness: string;
+  model: string;
+  uaFullVersion: string;
+  fullVersionList: StealthUaBrandVersion[];
+}
+
+export interface StealthUaRequestHeaders {
+  platform: string;
+  platformVersion?: string;
+}
+
+export interface StealthUaProfile {
+  userAgent: string;
+  chromeVersion: string;
+  chromeMajor: string;
+  clientHints: StealthUaClientHints;
+  requestHeaders: StealthUaRequestHeaders;
 }

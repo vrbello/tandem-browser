@@ -53,6 +53,8 @@ vi.mock('../../utils/logger', () => ({
 
 import fs from 'fs';
 import { StealthManager, deriveStealthSeed, loadOrCreateInstallSecret } from '../manager';
+import { createDarwinStealthUaAdapter, createWindowsStealthUaAdapter } from '../../platform/stealth-ua';
+import type { StealthUaAdapter } from '../../platform/types';
 
 const normalizePath = (value: unknown) => String(value).replace(/\\/g, '/');
 
@@ -190,8 +192,8 @@ describe('StealthManager — per-install seed', () => {
       JSON.stringify({ stealthInstallSecret: existing })
     );
 
-    const m1 = new StealthManager(makeMockSession(), 'persist:tandem');
-    const m2 = new StealthManager(makeMockSession(), 'persist:tandem');
+    const m1 = new StealthManager(makeMockSession(), 'persist:tandem', createDarwinStealthUaAdapter());
+    const m2 = new StealthManager(makeMockSession(), 'persist:tandem', createDarwinStealthUaAdapter());
 
     expect(m1.getPartitionSeed()).toBe(m2.getPartitionSeed());
   });
@@ -201,7 +203,7 @@ describe('StealthManager — per-install seed', () => {
     vi.mocked(fs.existsSync).mockImplementation((p: fs.PathLike) => {
       return !normalizePath(p).endsWith('/config.json');
     });
-    const m1 = new StealthManager(makeMockSession(), 'persist:tandem');
+    const m1 = new StealthManager(makeMockSession(), 'persist:tandem', createDarwinStealthUaAdapter());
     const seed1 = m1.getPartitionSeed();
 
     // Reset mocks — simulate a second, separate install with a different secret
@@ -210,7 +212,7 @@ describe('StealthManager — per-install seed', () => {
     vi.mocked(fs.readFileSync).mockReturnValue(
       JSON.stringify({ stealthInstallSecret: 'b'.repeat(64) })
     );
-    const m2 = new StealthManager(makeMockSession(), 'persist:tandem');
+    const m2 = new StealthManager(makeMockSession(), 'persist:tandem', createDarwinStealthUaAdapter());
     const seed2 = m2.getPartitionSeed();
 
     expect(seed1).not.toBe(seed2);
@@ -222,8 +224,8 @@ describe('StealthManager — per-install seed', () => {
       JSON.stringify({ stealthInstallSecret: 'c'.repeat(64) })
     );
 
-    const m1 = new StealthManager(makeMockSession(), 'persist:tandem');
-    const m2 = new StealthManager(makeMockSession(), 'persist:workspace-a');
+    const m1 = new StealthManager(makeMockSession(), 'persist:tandem', createDarwinStealthUaAdapter());
+    const m2 = new StealthManager(makeMockSession(), 'persist:workspace-a', createDarwinStealthUaAdapter());
 
     expect(m1.getPartitionSeed()).not.toBe(m2.getPartitionSeed());
   });
@@ -252,13 +254,122 @@ function makeDispatcherMock() {
 }
 
 /** Sets up a StealthManager backed by a deterministic fake install secret. */
-function makeManagerWithFixedSecret(): StealthManager {
+function makeManagerWithFixedSecret(stealthUa: StealthUaAdapter = createDarwinStealthUaAdapter()): StealthManager {
   vi.mocked(fs.existsSync).mockReturnValue(true);
   vi.mocked(fs.readFileSync).mockReturnValue(
     JSON.stringify({ stealthInstallSecret: 'a'.repeat(64) })
   );
-  return new StealthManager(makeMockSession(), 'persist:tandem');
+  return new StealthManager(makeMockSession(), 'persist:tandem', stealthUa);
 }
+
+describe('stealth-ua platform adapters', () => {
+  const chromeVersion = '132.0.6834.160';
+
+  it('pins the macOS UA and UA-CH profile byte-for-byte', () => {
+    const profile = createDarwinStealthUaAdapter().getProfile(chromeVersion);
+
+    expect(profile).toMatchInlineSnapshot(`
+      {
+        "chromeMajor": "132",
+        "chromeVersion": "132.0.6834.160",
+        "clientHints": {
+          "architecture": "arm",
+          "bitness": "64",
+          "brands": [
+            {
+              "brand": "Google Chrome",
+              "version": "132",
+            },
+            {
+              "brand": "Chromium",
+              "version": "132",
+            },
+            {
+              "brand": "Not(A:Brand",
+              "version": "8",
+            },
+          ],
+          "fullVersionList": [
+            {
+              "brand": "Google Chrome",
+              "version": "132.0.6834.160",
+            },
+            {
+              "brand": "Chromium",
+              "version": "132.0.6834.160",
+            },
+            {
+              "brand": "Not(A:Brand",
+              "version": "8.0.0.0",
+            },
+          ],
+          "mobile": false,
+          "model": "",
+          "platform": "macOS",
+          "platformVersion": "15.3.0",
+          "uaFullVersion": "132.0.6834.160",
+        },
+        "requestHeaders": {
+          "platform": ""macOS"",
+        },
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.6834.160 Safari/537.36",
+      }
+    `);
+  });
+
+  it('builds a Chrome-on-Windows UA and UA-CH profile', () => {
+    const profile = createWindowsStealthUaAdapter().getProfile(chromeVersion);
+
+    expect(profile).toMatchInlineSnapshot(`
+      {
+        "chromeMajor": "132",
+        "chromeVersion": "132.0.6834.160",
+        "clientHints": {
+          "architecture": "x86",
+          "bitness": "64",
+          "brands": [
+            {
+              "brand": "Google Chrome",
+              "version": "132",
+            },
+            {
+              "brand": "Chromium",
+              "version": "132",
+            },
+            {
+              "brand": "Not(A:Brand",
+              "version": "8",
+            },
+          ],
+          "fullVersionList": [
+            {
+              "brand": "Google Chrome",
+              "version": "132.0.6834.160",
+            },
+            {
+              "brand": "Chromium",
+              "version": "132.0.6834.160",
+            },
+            {
+              "brand": "Not(A:Brand",
+              "version": "8.0.0.0",
+            },
+          ],
+          "mobile": false,
+          "model": "",
+          "platform": "Windows",
+          "platformVersion": "15.0.0",
+          "uaFullVersion": "132.0.6834.160",
+        },
+        "requestHeaders": {
+          "platform": ""Windows"",
+          "platformVersion": ""15.0.0"",
+        },
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.6834.160 Safari/537.36",
+      }
+    `);
+  });
+});
 
 // ─── registerWith() — Sec-CH-UA header patching ───────────────────────────────
 
@@ -416,6 +527,31 @@ describe('registerWith() — Sec-CH-UA client-hints injection', () => {
     expect(result['Sec-CH-UA-Mobile']).toBeUndefined();
     expect(result['Sec-CH-UA-Platform']).toBeUndefined();
   });
+
+  it('keeps macOS request UA-CH headers byte-compatible by not adding platform-version', () => {
+    const mgr = makeManagerWithFixedSecret(createDarwinStealthUaAdapter());
+    const disp = makeDispatcherMock();
+    mgr.registerWith(disp as never);
+    const handle = disp.getHandler();
+
+    const result = handle({ url: 'https://example.com' }, {});
+
+    expect(result['sec-ch-ua-platform']).toBe('"macOS"');
+    expect(result['sec-ch-ua-platform-version']).toBeUndefined();
+  });
+
+  it('emits Windows request UA-CH headers from the Windows stealth adapter', () => {
+    const mgr = makeManagerWithFixedSecret(createWindowsStealthUaAdapter());
+    const disp = makeDispatcherMock();
+    mgr.registerWith(disp as never);
+    const handle = disp.getHandler();
+
+    const result = handle({ url: 'https://example.com' }, {});
+
+    expect(result['sec-ch-ua']).toContain('"Google Chrome";v="132"');
+    expect(result['sec-ch-ua-platform']).toBe('"Windows"');
+    expect(result['sec-ch-ua-platform-version']).toBe('"15.0.0"');
+  });
 });
 
 describe('getStealthScript() — timing protection', () => {
@@ -455,13 +591,12 @@ describe('getStealthScript() — userAgentData GREASE brand consistency', () => 
     expect(script).not.toMatch(/__greaseVersion\s*=\s*'24'/);
   });
 
-  it('fullVersionList GREASE version is built from __greaseVersion (e.g. "8.0.0.0")', () => {
+  it('fullVersionList GREASE version is pinned to Chrome 120+ "8.0.0.0"', () => {
     const script = StealthManager.getStealthScript('seed');
     // Should not hardcode the old wrong "24.0.0.0"
     expect(script).not.toContain('"24.0.0.0"');
     expect(script).not.toContain("'24.0.0.0'");
-    // Should compose it from the variable
-    expect(script).toContain("__greaseVersion + '.0.0.0'");
+    expect(script).toContain('"8.0.0.0"');
   });
 
   it('includes "Google Chrome" in all brand lists', () => {
@@ -470,6 +605,19 @@ describe('getStealthScript() — userAgentData GREASE brand consistency', () => 
     const chromeCount = (script.match(/Google Chrome/g) || []).length;
     // brands (1) + getHighEntropyValues brands (1) + fullVersionList (1) = min 3
     expect(chromeCount).toBeGreaterThanOrEqual(3);
+  });
+
+  it('uses Windows userAgentData values when given the Windows stealth adapter', () => {
+    const script = StealthManager.getStealthScript(
+      'seed',
+      '132.0.6834.160',
+      createWindowsStealthUaAdapter(),
+    );
+
+    expect(script).toContain('platform: "Windows"');
+    expect(script).toContain('platformVersion: "15.0.0"');
+    expect(script).toContain('architecture: "x86"');
+    expect(script).not.toContain("platform: 'macOS'");
   });
 });
 
@@ -544,6 +692,13 @@ describe('getEarlyScript() — minimal OOPIF-safe stealth', () => {
     expect(script).toContain('130'); // chromeMajor
   });
 
+  it('uses Windows userAgentData values when given the Windows stealth adapter', () => {
+    const script = StealthManager.getEarlyScript('132.0.6834.160', createWindowsStealthUaAdapter());
+    expect(script).toContain('platform: "Windows"');
+    expect(script).toContain('platformVersion: "15.0.0"');
+    expect(script).toContain('architecture: "x86"');
+  });
+
   it('uses process.versions.chrome by default', () => {
     const script = StealthManager.getEarlyScript();
     // The test environment sets chrome to 132.0.6834.160 in beforeAll
@@ -568,7 +723,7 @@ describe('apply() — preload policy sync', () => {
       registerPreloadScript: ReturnType<typeof vi.fn>;
     };
 
-    const manager = new StealthManager(session as never, 'persist:tandem');
+    const manager = new StealthManager(session as never, 'persist:tandem', createDarwinStealthUaAdapter());
     await manager.apply({ cloudflarePolicySyncChannel: 'tandem:cloudflare-policy-sync' });
 
     expect(session.setUserAgent).toHaveBeenCalled();

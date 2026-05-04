@@ -5,7 +5,7 @@ import { createDarwinNativeMessagingAdapter, createUnsupportedNativeMessagingAda
 import { createDarwinPathsAdapter, createLinuxPathsAdapter, createUnsupportedPathsAdapter, createWindowsPathsAdapter } from './paths';
 import { createProcessAdapter } from './process';
 import { createDarwinSecretsAdapter, createUnsupportedSecretsAdapter } from './secrets';
-import { createDarwinStealthUaAdapter, createUnsupportedStealthUaAdapter } from './stealth-ua';
+import { createDarwinStealthUaAdapter, createUnsupportedStealthUaAdapter, createWindowsStealthUaAdapter } from './stealth-ua';
 import type { PlatformAdapter } from './types';
 import { createDarwinVideoAudioAdapter, createUnsupportedVideoAudioAdapter } from './video-audio';
 import { createDarwinVoiceAdapter, createUnsupportedVoiceAdapter } from './voice';
@@ -63,7 +63,11 @@ function createStubPlatform(id: PlatformId): PlatformAdapter {
       : id === 'linux'
         ? createLinuxWindowChromeAdapter()
         : createUnsupportedWindowChromeAdapter(id),
-    stealthUa: createUnsupportedStealthUaAdapter(id),
+    stealthUa: id === 'win32'
+      ? createWindowsStealthUaAdapter()
+      : id === 'linux'
+        ? createDarwinStealthUaAdapter()
+        : createUnsupportedStealthUaAdapter(id),
     secrets: createUnsupportedSecretsAdapter(id),
   };
 }
