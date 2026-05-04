@@ -4,6 +4,12 @@ All notable changes to Tandem Browser will be documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- chore: Add unsigned local Windows electron-builder targets for x64 NSIS and
+  portable artifacts with target-specific `setup` and `portable` artifact
+  names, while leaving the existing macOS packaging config unchanged.
+
 ## [v1.9.0] - 2026-05-04
 
 Windows support Phase 12. Tandem now keeps Electron shortcut accelerators on
