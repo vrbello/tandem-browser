@@ -23,6 +23,7 @@ vi.mock('fs', async () => {
 
 import fs from 'fs';
 import { ConfigManager } from '../manager';
+import { tandemDir } from '../../utils/paths';
 
 describe('ConfigManager', () => {
   beforeEach(() => {
@@ -413,11 +414,11 @@ describe('ConfigManager', () => {
   });
 
   describe('directory creation', () => {
-    it('creates ~/.tandem directory if it does not exist', () => {
+    it('creates the platform-specific Tandem data directory if it does not exist', () => {
       vi.mocked(fs.existsSync).mockReturnValue(false);
       new ConfigManager();
       expect(fs.mkdirSync).toHaveBeenCalledWith(
-        expect.stringContaining('.tandem'),
+        tandemDir(),
         { recursive: true }
       );
     });

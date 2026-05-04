@@ -1,18 +1,42 @@
-import type * as PathsModule from '../../utils/paths';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { NotImplementedError, type PlatformId } from '../errors';
 import type { PathsAdapter } from '../types';
 
-export function createDarwinPathsAdapter(): PathsAdapter {
+const PRODUCT_DATA_DIR = 'Tandem Browser';
+
+function createNodePathsAdapter(resolveRoot: () => string): PathsAdapter {
   return {
-    tandemDir: (...subpath) => {
-      const { tandemDir } = require('../../utils/paths') as typeof PathsModule;
-      return tandemDir(...subpath);
-    },
+    tandemDir: (...subpath) => path.join(resolveRoot(), ...subpath),
     ensureDir: (dir) => {
-      const { ensureDir } = require('../../utils/paths') as typeof PathsModule;
-      return ensureDir(dir);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      return dir;
     },
   };
+}
+
+function legacyTandemRoot(): string {
+  return path.join(os.homedir(), '.tandem');
+}
+
+function windowsTandemRoot(): string {
+  const appData = process.env.APPDATA?.trim() || path.join(os.homedir(), 'AppData', 'Roaming');
+  return path.join(appData, PRODUCT_DATA_DIR);
+}
+
+export function createDarwinPathsAdapter(): PathsAdapter {
+  return createNodePathsAdapter(legacyTandemRoot);
+}
+
+export function createLinuxPathsAdapter(): PathsAdapter {
+  return createNodePathsAdapter(legacyTandemRoot);
+}
+
+export function createWindowsPathsAdapter(): PathsAdapter {
+  return createNodePathsAdapter(windowsTandemRoot);
 }
 
 export function createUnsupportedPathsAdapter(platform: PlatformId): PathsAdapter {

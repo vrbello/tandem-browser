@@ -78,7 +78,7 @@ interface ApiCallerInfo {
   extensionAccess?: ExtensionRouteAccessDecision | null;
 }
 
-/** Generate or load API auth token from ~/.tandem/api-token */
+/** Generate or load API auth token from the platform-specific Tandem data directory. */
 function getOrCreateAuthToken(): string {
   const baseDir = tandemDir();
   if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
@@ -95,8 +95,12 @@ function getOrCreateAuthToken(): string {
 
   const token = crypto.randomBytes(32).toString('hex');
   fs.writeFileSync(tokenPath, token, { mode: 0o600 });
-  log.info('🔑 New API token generated → ~/.tandem/api-token');
+  log.info(`New API token generated at ${tokenPath}`);
   return token;
+}
+
+function getLocalApiTokenHint(): string {
+  return `Token is in ${tandemDir('api-token')}`;
 }
 
 /** Options object for TandemAPI constructor */
@@ -338,17 +342,17 @@ export class TandemAPI {
       return {
         allowed: false,
         caller,
-        reason: 'Unauthorized — query-string token auth was removed. Use Authorization: Bearer <token>. Token is in ~/.tandem/api-token',
+        reason: `Unauthorized — query-string token auth was removed. Use Authorization: Bearer <token>. ${getLocalApiTokenHint()}`,
         status: 401,
         extensionAccess: null,
       };
     }
 
     const reason = caller.kind === 'shell-internal'
-      ? 'Unauthorized — shell/file callers are no longer auto-trusted. Use Authorization: Bearer <token>. Token is in ~/.tandem/api-token'
+      ? `Unauthorized — shell/file callers are no longer auto-trusted. Use Authorization: Bearer <token>. ${getLocalApiTokenHint()}`
       : TRUSTED_EXTENSION_HTTP_PATHS.has(req.path)
         ? 'Unauthorized — this route is reserved for installed extension callers or bearer-token clients'
-        : 'Unauthorized — provide Authorization: Bearer <token>. Token is in ~/.tandem/api-token';
+        : `Unauthorized — provide Authorization: Bearer <token>. ${getLocalApiTokenHint()}`;
 
     return {
       allowed: false,

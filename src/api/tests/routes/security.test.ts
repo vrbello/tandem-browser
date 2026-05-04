@@ -14,6 +14,7 @@ vi.mock('../../../utils/logger', () => ({
 }));
 
 import { registerSecurityRoutes } from '../../../security/routes';
+import { tandemDir } from '../../../utils/paths';
 
 // ── Mock factory ────────────────────────────────────────────────
 
@@ -1123,7 +1124,7 @@ describe('security routes', () => {
       expect(res.status).toBe(200);
       expect(res.body).toEqual({
         secret: 'test-secret',
-        path: '~/.tandem/security/gatekeeper.secret',
+        path: tandemDir('security', 'gatekeeper.secret'),
       });
     });
 

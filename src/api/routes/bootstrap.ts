@@ -10,6 +10,7 @@
 import type { Router, Request, Response } from 'express';
 import { app } from 'electron';
 import type { RouteContext } from '../context';
+import { tandemDir } from '../../utils/paths';
 
 /** Capability families exposed by Tandem, grouped for agent discovery. */
 const CAPABILITY_FAMILIES = [
@@ -54,6 +55,7 @@ export function registerBootstrapRoutes(router: Router, _ctx: RouteContext): voi
   router.get('/agent', (req: Request, res: Response) => {
     const version = getVersion();
     const baseUrl = getBaseUrl(req);
+    const localTokenPath = tandemDir('api-token');
     res.type('text/markdown').send(`# Tandem Browser — Agent Bootstrap
 
 **Version:** ${version}
@@ -63,7 +65,7 @@ export function registerBootstrapRoutes(router: Router, _ctx: RouteContext): voi
 ## How to connect
 
 ### On the same machine as Tandem
-Read the local API token from \`~/.tandem/api-token\` and use it as:
+Read the local API token from \`${localTokenPath}\` and use it as:
 \`\`\`
 Authorization: Bearer <token>
 \`\`\`

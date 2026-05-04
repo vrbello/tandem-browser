@@ -76,7 +76,7 @@ const CAPABILITY_PROFILES: Record<PlatformId, PlatformSupportProfile> = {
       videoRecorderSystemAudio: unsupportedCapability('Windows WASAPI loopback planned in windows-support phase 11.'),
       keyboardShortcutsLabels: { status: 'partial', notes: 'Cross-platform labels finalized in windows-support phase 12.' },
       secretsAtRest: unsupportedCapability('Unified safeStorage adapter planned in windows-support phase 5.'),
-      userDataDirectory: unsupportedCapability('Windows APPDATA path planned in windows-support phase 4.'),
+      userDataDirectory: { status: 'supported', notes: 'Windows user data resolves to APPDATA/Tandem Browser.' },
     },
   },
   linux: {

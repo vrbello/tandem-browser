@@ -2,24 +2,31 @@ import { describe, it, expect, vi } from 'vitest';
 import path from 'path';
 import os from 'os';
 import { tandemDir, ensureDir } from '../paths';
+import { selectPlatform } from '../../platform';
 
 describe('tandemDir()', () => {
-  it('returns ~/.tandem with no arguments', () => {
-    expect(tandemDir()).toBe(path.join(os.homedir(), '.tandem'));
+  it('delegates the root path to the current platform adapter', () => {
+    expect(tandemDir()).toBe(selectPlatform().paths.tandemDir());
   });
 
-  it('appends a single subpath', () => {
-    expect(tandemDir('extensions')).toBe(path.join(os.homedir(), '.tandem', 'extensions'));
+  it('appends a single subpath through the current platform adapter', () => {
+    expect(tandemDir('extensions')).toBe(selectPlatform().paths.tandemDir('extensions'));
   });
 
   it('appends multiple subpath segments', () => {
     expect(tandemDir('security', 'blocklists')).toBe(
-      path.join(os.homedir(), '.tandem', 'security', 'blocklists')
+      selectPlatform().paths.tandemDir('security', 'blocklists')
     );
   });
 
   it('handles file names in subpath', () => {
-    expect(tandemDir('api-token')).toBe(path.join(os.homedir(), '.tandem', 'api-token'));
+    expect(tandemDir('api-token')).toBe(selectPlatform().paths.tandemDir('api-token'));
+  });
+
+  it('keeps the macOS legacy ~/.tandem api-token path pinned', () => {
+    expect(selectPlatform('darwin').paths.tandemDir('api-token')).toBe(
+      path.join(os.homedir(), '.tandem', 'api-token')
+    );
   });
 });
 

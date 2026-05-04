@@ -24,8 +24,8 @@
 
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import * as os from 'os';
 import { createLogger } from '../utils/logger';
+import { tandemDir } from '../utils/paths';
 
 const log = createLogger('AgentTrust');
 
@@ -115,7 +115,7 @@ export class AgentTrustStore {
   private persistInFlight: Promise<void> | null = null;
 
   constructor(storePath?: string) {
-    this.storePath = storePath ?? path.join(os.homedir(), '.tandem', 'agent-trust.json');
+    this.storePath = storePath ?? tandemDir('agent-trust.json');
   }
 
   /**

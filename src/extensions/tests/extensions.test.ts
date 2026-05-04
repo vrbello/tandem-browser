@@ -9,7 +9,7 @@ import { nmProxy } from '../nm-proxy';
 import AdmZip from 'adm-zip';
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
+import { tandemDir } from '../../utils/paths';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -364,7 +364,7 @@ describe('CRX Extraction', () => {
       .extractCrx(buffer, extensionId, format);
 
   beforeEach(() => {
-    tempDir = path.join(os.homedir(), '.tandem', 'extensions');
+    tempDir = tandemDir('extensions');
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
@@ -548,7 +548,19 @@ describe('Chrome Importer', () => {
 
   it('isAlreadyImported returns false for non-existent extension', () => {
     const importer = new ChromeExtensionImporter();
-    expect(importer.isAlreadyImported('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaan')).toBe(false);
+    const chars = 'abcdefghijklmnop';
+    let extensionId = '';
+    const seedStart = Date.now();
+    for (let seed = seedStart; seed < seedStart + 64; seed++) {
+      const candidate = Array.from({ length: 32 }, (_value, index) => chars[(seed + index) % chars.length]).join('');
+      if (!fs.existsSync(path.join(tandemDir('extensions'), candidate))) {
+        extensionId = candidate;
+        break;
+      }
+    }
+
+    expect(extensionId).toMatch(/^[a-p]{32}$/);
+    expect(importer.isAlreadyImported(extensionId)).toBe(false);
   });
 
   it('supports different profile names', () => {
@@ -575,7 +587,7 @@ const RUN_NETWORK_TESTS = process.env.TANDEM_NETWORK_TESTS === 'true';
 describe.skipIf(!RUN_NETWORK_TESTS)('Extension Install Flow (network)', () => {
   const downloader = new CrxDownloader();
   const testExtId = 'gpmodmeblccallcadopbcoeoejepgpnb'; // JSON Formatter (small, fast)
-  const installPath = path.join(os.homedir(), '.tandem', 'extensions', testExtId);
+  const installPath = tandemDir('extensions', testExtId);
 
   afterAll(() => {
     // Clean up test download

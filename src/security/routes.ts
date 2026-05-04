@@ -3,6 +3,7 @@ import type { SecurityManager } from './security-manager';
 import type { GuardianMode, GatekeeperAction } from './types';
 import type { TaskManager } from '../agents/task-manager';
 import { createLogger } from '../utils/logger';
+import { tandemDir } from '../utils/paths';
 
 const log = createLogger('SecurityRoutes');
 
@@ -509,7 +510,7 @@ export function registerSecurityRoutes(
         res.status(503).json({ error: 'Gatekeeper not initialized' });
         return;
       }
-      res.json({ secret: gatekeeperWs.getSecret(), path: '~/.tandem/security/gatekeeper.secret' });
+      res.json({ secret: gatekeeperWs.getSecret(), path: tandemDir('security', 'gatekeeper.secret') });
     } catch (e) {
       res.status(500).json({ error: e instanceof Error ? e.message : String(e) });
     }

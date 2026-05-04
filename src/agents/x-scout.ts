@@ -15,15 +15,16 @@
  * - Runs as a background task via Tandem API
  * - Uses humanized delays from Tandem's input system
  * - Reports via POST /chat
- * - Stores state in ~/.tandem/x-scout/
+ * - Stores state in the platform-specific Tandem data directory
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 import { API_PORT } from '../utils/constants';
+import { tandemDir } from '../utils/paths';
 
 const API = `http://localhost:${API_PORT}`;
-const SCOUT_DIR = path.join(process.env.HOME || '', '.tandem', 'x-scout');
+const SCOUT_DIR = tandemDir('x-scout');
 const STATE_FILE = path.join(SCOUT_DIR, 'state.json');
 const FINDINGS_FILE = path.join(SCOUT_DIR, 'findings.json');
 
