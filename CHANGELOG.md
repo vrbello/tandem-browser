@@ -4,6 +4,20 @@ All notable changes to Tandem Browser will be documented in this file.
 
 ## Unreleased
 
+## [v1.2.0] - 2026-05-04
+
+Windows support Phase 4. Tandem's shared user-data helper now resolves through
+the platform adapter while preserving macOS and Linux legacy storage paths.
+
+### Added
+
+- **Windows user-data path adapter** - `tandemDir()` now delegates through
+  `src/platform/paths/`, keeping macOS/Linux on `~/.tandem` and resolving
+  Windows data under `%APPDATA%\Tandem Browser`.
+- **Path adapter tests** - added coverage proving the macOS legacy
+  `~/.tandem/api-token` path stays unchanged and Windows resolves through
+  `APPDATA/Tandem Browser`.
+
 ### Changed
 
 - **CI verification matrix** - `npm run verify` now runs on Ubuntu, macOS, and
@@ -14,6 +28,9 @@ All notable changes to Tandem Browser will be documented in this file.
   a Node launcher that compiles, clears stale local API port listeners per
   platform, preserves the macOS Electron quarantine cleanup, and starts Electron
   without changing the public platform support status.
+- **Local API token hints** - API and MCP code now use the platform data helper
+  for `api-token` lookups and messages, so macOS keeps `~/.tandem/api-token`
+  while Windows points local agents at the APPDATA-backed directory.
 
 ## [v1.1.0] - 2026-05-04
 

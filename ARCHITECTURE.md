@@ -92,7 +92,8 @@ This keeps the dependency graph as a DAG with no circular imports.
 
 ### Where State Lives
 
-All persistent data is stored in `~/.tandem/`:
+Persistent data is stored via `tandemDir()`: `~/.tandem/` on macOS/Linux and
+`%APPDATA%\Tandem Browser\` on Windows.
 
 | Data | File/Directory | Manager |
 |------|---------------|---------|
@@ -117,7 +118,7 @@ All persistent data is stored in `~/.tandem/`:
 ### HTTP API (src/api/)
 
 Express server bound to `127.0.0.1:8765`. Bearer token auth from
-`~/.tandem/api-token`. 19 route files in `src/api/routes/`, all following:
+`tandemDir('api-token')`. 19 route files in `src/api/routes/`, all following:
 
 ```typescript
 export function registerXRoutes(router: Router, ctx: RouteContext): void {

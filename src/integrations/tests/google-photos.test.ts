@@ -1,6 +1,4 @@
 import fs from 'fs';
-import os from 'os';
-import path from 'path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('fs', async () => {
@@ -24,9 +22,10 @@ vi.mock('fs', async () => {
 });
 
 import { GooglePhotosManager } from '../google-photos';
+import { tandemDir } from '../../utils/paths';
 
-const configPath = path.join(os.homedir(), '.tandem', 'google-photos.json');
-const authPath = path.join(os.homedir(), '.tandem', 'google-photos-auth.json');
+const configPath = tandemDir('google-photos.json');
+const authPath = tandemDir('google-photos-auth.json');
 
 describe('GooglePhotosManager', () => {
   const configManager = {

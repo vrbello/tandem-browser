@@ -397,7 +397,7 @@ export class ChromeImporter {
       return {
         ok: false,
         count: 0,
-        error: 'Chrome cookies are encrypted. To import: (1) restart Chrome with --remote-debugging-port=9222, or (2) place decrypted cookies in ~/.tandem/chrome-cookies.json',
+        error: `Chrome cookies are encrypted. To import: (1) restart Chrome with --remote-debugging-port=9222, or (2) place decrypted cookies in ${path.join(this.tandemDir, 'chrome-cookies.json')}`,
       };
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);

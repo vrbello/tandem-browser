@@ -366,7 +366,7 @@ export function registerBrowserRoutes(router: Router, ctx: RouteContext): void {
       }
     } catch (e) {
       if (e instanceof Error && e.message === 'Path is outside the allowed directories') {
-        res.status(400).json({ error: 'Save path must be in ~/Desktop, ~/Downloads, or ~/.tandem' });
+        res.status(400).json({ error: `Save path must be in ~/Desktop, ~/Downloads, or ${tandemDir()}` });
         return;
       }
       handleRouteError(res, e);

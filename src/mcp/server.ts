@@ -3,6 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import fs from 'node:fs';
 import path from 'node:path';
 import { API_PORT } from '../utils/constants';
+import { tandemDir } from '../utils/paths';
 import { registerAllTools, registerAllResources } from './register-all.js';
 
 // MCP uses stdio for protocol messages — ALL logging must go to stderr.
@@ -49,8 +50,7 @@ registerAllResources(server);
 function startEventListener(): void {
   const token = (() => {
     try {
-      const tokenPath = require('path').join(require('os').homedir(), '.tandem', 'api-token');
-      return require('fs').readFileSync(tokenPath, 'utf-8').trim();
+      return fs.readFileSync(tandemDir('api-token'), 'utf-8').trim();
     } catch { return ''; }
   })();
 

@@ -14,10 +14,20 @@ vi.mock('fs', async () => {
       readdirSync: vi.fn().mockReturnValue([]),
       unlinkSync: vi.fn(),
       mkdirSync: vi.fn(),
+      promises: {
+        ...actual.promises,
+        readFile: vi.fn(),
+        writeFile: vi.fn(),
+      },
     },
     existsSync: vi.fn().mockReturnValue(false),
     readFileSync: vi.fn(),
     writeFileSync: vi.fn(),
+    promises: {
+      ...actual.promises,
+      readFile: vi.fn(),
+      writeFile: vi.fn(),
+    },
   };
 });
 
@@ -52,6 +62,7 @@ describe('Data Routes', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(fs.promises.writeFile).mockResolvedValue(undefined);
     ctx = createMockContext();
     app = createTestApp(registerDataRoutes, ctx);
   });

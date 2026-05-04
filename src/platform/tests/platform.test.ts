@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import os from 'os';
+import path from 'path';
 import { NotImplementedError, getPlatformCapabilities, selectPlatform } from '..';
 
 describe('selectPlatform', () => {
@@ -8,6 +10,7 @@ describe('selectPlatform', () => {
     expect(platform.id).toBe('darwin');
     expect(platform.process.isMacOS()).toBe(true);
     expect(platform.capabilities.capabilities.appStartup.status).toBe('supported');
+    expect(platform.paths.tandemDir('foo')).toBe(path.join(os.homedir(), '.tandem', 'foo'));
     expect(platform.windowChrome.getBrowserWindowOptions()).toMatchObject({
       titleBarStyle: 'hiddenInset',
     });
@@ -19,6 +22,7 @@ describe('selectPlatform', () => {
     expect(platform.id).toBe('win32');
     expect(platform.process.isWindows()).toBe(true);
     expect(platform.capabilities.capabilities.appStartup.status).toBe('unsupported');
+    expect(platform.capabilities.capabilities.userDataDirectory.status).toBe('supported');
     expect(() => platform.chromeImport.getUnavailableStatus()).not.toThrow();
     expect(() => platform.windowChrome.getBrowserWindowOptions()).toThrow(NotImplementedError);
   });
@@ -29,6 +33,7 @@ describe('selectPlatform', () => {
     expect(platform.id).toBe('linux');
     expect(platform.process.isLinux()).toBe(true);
     expect(platform.capabilities.capabilities.windowChrome.status).toBe('supported');
+    expect(platform.paths.tandemDir('foo')).toBe(path.join(os.homedir(), '.tandem', 'foo'));
     expect(() => platform.chromeImport.getUnavailableStatus()).not.toThrow();
     expect(() => platform.secrets.loadOrCreateInstallSecret()).toThrow(NotImplementedError);
   });
@@ -39,5 +44,23 @@ describe('selectPlatform', () => {
     expect(platform.id).toBe('unsupported');
     expect(platform.capabilities.tier).toBe('unsupported');
     expect(getPlatformCapabilities('freebsd').capabilities.appStartup.status).toBe('unsupported');
+  });
+
+  it('uses APPDATA/Tandem Browser for Windows user data paths', () => {
+    const originalAppData = process.env.APPDATA;
+    const appData = path.join(os.tmpdir(), 'tandem-appdata-test');
+    process.env.APPDATA = appData;
+
+    try {
+      const platform = selectPlatform('win32');
+
+      expect(platform.paths.tandemDir('foo')).toBe(path.join(appData, 'Tandem Browser', 'foo'));
+    } finally {
+      if (originalAppData === undefined) {
+        delete process.env.APPDATA;
+      } else {
+        process.env.APPDATA = originalAppData;
+      }
+    }
   });
 });
