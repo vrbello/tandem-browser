@@ -41,6 +41,7 @@ describe('selectPlatform', () => {
     expect(platform.windowChrome.getBrowserWindowOptions()).toMatchObject({
       frame: false,
     });
+    expect(platform.stealthUa.getProfile('132.0.6834.160').clientHints.platform).toBe('macOS');
     expect(() => platform.secrets.loadOrCreateInstallSecret()).toThrow(NotImplementedError);
   });
 

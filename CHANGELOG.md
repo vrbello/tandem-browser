@@ -4,6 +4,37 @@ All notable changes to Tandem Browser will be documented in this file.
 
 ## Unreleased
 
+## [v1.5.0] - 2026-05-04
+
+Windows support Phase 7. Tandem now builds stealth UA and UA-CH values through
+the platform adapter so Windows source runs present Chrome on Windows while the
+macOS Chrome-on-macOS fingerprint remains pinned.
+
+### Added
+
+- **Windows stealth UA adapter** (`src/platform/stealth-ua/`) - added a
+  Chrome-on-Windows UA profile with Windows UA-CH platform, platform-version,
+  architecture, bitness, and full-version brand values.
+- **Stealth UA snapshots** (`src/stealth/tests/manager.test.ts`) - pinned the
+  macOS UA and UA-CH profile and added Windows profile coverage.
+
+### Changed
+
+- **Stealth manager UA construction** (`src/stealth/manager.ts`) - moved
+  session user-agent, request UA-CH headers, and injected
+  `navigator.userAgentData` values onto the platform stealth-ua adapter.
+- **Windows platform selection** (`src/platform/index.ts`) - wires the Windows
+  stealth UA adapter for `win32` platform runs.
+
+### Technical Details
+
+- macOS keeps the existing UA string, low/high-entropy UA-CH values, and
+  request header behavior, including no `sec-ch-ua-platform-version` header.
+- Windows emits `Sec-CH-UA-Platform: "Windows"` and
+  `Sec-CH-UA-Platform-Version: "15.0.0"` for a Windows 11-compatible Chrome
+  profile.
+- No canvas, WebGL, audio, font-noise, or humanized input timing logic changed.
+
 ## [v1.4.0] - 2026-05-04
 
 Windows support Phase 6. Tandem now uses adapter-driven window chrome options

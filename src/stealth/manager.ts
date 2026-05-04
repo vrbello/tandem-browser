@@ -3,6 +3,9 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import type { RequestDispatcher } from '../network/dispatcher';
+import { selectPlatform } from '../platform';
+import { createDarwinStealthUaAdapter } from '../platform/stealth-ua';
+import type { StealthUaAdapter, StealthUaProfile } from '../platform/types';
 import { createLogger } from '../utils/logger';
 import { tandemDir } from '../utils/paths';
 import { isGoogleAuthUrl } from '../utils/security';
@@ -70,12 +73,17 @@ export class StealthManager {
   private session: Session;
   private partitionSeed: string;
   private readonly originalUserAgent: string;
-  private readonly USER_AGENT: string;
-  private readonly chromeMajor: string;
+  private readonly stealthUa: StealthUaAdapter;
+  private readonly uaProfile: StealthUaProfile;
 
   // === 2. Constructor ===
-  constructor(session: Session, partition: string = 'persist:tandem') {
+  constructor(
+    session: Session,
+    partition: string = 'persist:tandem',
+    stealthUa: StealthUaAdapter = selectPlatform().stealthUa,
+  ) {
     this.session = session;
+    this.stealthUa = stealthUa;
     // Store the real Electron UA before overwriting — needed for Google auth
     this.originalUserAgent = session.getUserAgent();
     // Derive seed from per-install secret + partition — unique per install,
@@ -84,10 +92,7 @@ export class StealthManager {
     this.partitionSeed = deriveStealthSeed(installSecret, partition);
 
     // Build UA from Electron's actual Chromium version to avoid detection mismatches
-    const chromeVersion = process.versions.chrome;
-    this.chromeMajor = chromeVersion.split('.')[0];
-    this.USER_AGENT =
-      `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersion} Safari/537.36`;
+    this.uaProfile = this.stealthUa.getProfile(process.versions.chrome);
   }
 
   // === 4. Public methods ===
@@ -96,7 +101,7 @@ export class StealthManager {
   async apply(options?: { cloudflarePolicySyncChannel?: string }): Promise<void> {
     // Set realistic User-Agent globally (LinkedIn etc. block "Electron" UA)
     // Google auth is excluded via the onBeforeSendHeaders handler in registerWith()
-    this.session.setUserAgent(this.USER_AGENT);
+    this.session.setUserAgent(this.uaProfile.userAgent);
 
     // Write a session-level preload that injects stealth patches into EVERY
     // renderer frame — including cross-origin out-of-process iframes (OOPIF)
@@ -127,8 +132,12 @@ export class StealthManager {
    * propagate to cross-process iframes depending on the Electron / Chromium version.
    */
   private async writeAndRegisterPreload(cloudflarePolicySyncChannel?: string): Promise<void> {
-    const stealthScript = StealthManager.getStealthScript(this.partitionSeed);
-    const earlyScript = StealthManager.getEarlyScript();
+    const stealthScript = StealthManager.getStealthScript(
+      this.partitionSeed,
+      this.uaProfile.chromeVersion,
+      this.stealthUa,
+    );
+    const earlyScript = StealthManager.getEarlyScript(this.uaProfile.chromeVersion, this.stealthUa);
 
     // The preload runs in Electron's isolated renderer world.
     // executeJavaScriptInIsolatedWorld(0, ...) injects into world 0 = main page world,
@@ -254,14 +263,17 @@ export class StealthManager {
           return `${brands}, "Google Chrome";v="${version}"`;
         };
 
-        headers['sec-ch-ua']          = withGoogleChrome(chromiumBrands, this.chromeMajor);
+        headers['sec-ch-ua']          = withGoogleChrome(chromiumBrands, this.uaProfile.chromeMajor);
         headers['sec-ch-ua-mobile']   = '?0';
-        headers['sec-ch-ua-platform'] = '"macOS"';
+        headers['sec-ch-ua-platform'] = this.uaProfile.requestHeaders.platform;
+        if (this.uaProfile.requestHeaders.platformVersion) {
+          headers['sec-ch-ua-platform-version'] = this.uaProfile.requestHeaders.platformVersion;
+        }
         // Only send full-version-list if Chromium already included it;
         // it's a high-entropy hint that browsers normally send only on request.
         if (chromiumFullList) {
           headers['sec-ch-ua-full-version-list'] =
-            withGoogleChrome(chromiumFullList, process.versions.chrome);
+            withGoogleChrome(chromiumFullList, this.uaProfile.chromeVersion);
         }
 
         return headers;
@@ -285,8 +297,13 @@ export class StealthManager {
    * Uses its own idempotency guard (Symbol '__tandem_early_v1') so it doesn't
    * collide with the full stealth script that runs at dom-ready on main frames.
    */
-  static getEarlyScript(chromeVersion: string = process.versions.chrome): string {
-    const chromeMajor = chromeVersion.split('.')[0];
+  static getEarlyScript(
+    chromeVersion: string = process.versions.chrome,
+    stealthUa: StealthUaAdapter = createDarwinStealthUaAdapter(),
+  ): string {
+    const profile = stealthUa.getProfile(chromeVersion);
+    const brands = JSON.stringify(profile.clientHints.brands);
+    const fullVersionList = JSON.stringify(profile.clientHints.fullVersionList);
     return `
 (function() {
   var _sym = Symbol.for('__tandem_early_v1');
@@ -298,37 +315,23 @@ export class StealthManager {
 
   // 2. navigator.userAgentData — inject "Google Chrome" brand (the critical Cloudflare check)
   try {
-    var _chromeMajor = '${chromeMajor}';
-    var _chromeVersion = '${chromeVersion}';
     Object.defineProperty(navigator, 'userAgentData', {
       get: function() {
         return {
-          brands: [
-            { brand: 'Google Chrome',  version: _chromeMajor },
-            { brand: 'Chromium',       version: _chromeMajor },
-            { brand: 'Not(A:Brand',    version: '8' },
-          ],
+          brands: ${brands},
           mobile: false,
-          platform: 'macOS',
+          platform: ${JSON.stringify(profile.clientHints.platform)},
           getHighEntropyValues: function(hints) {
             return Promise.resolve({
-              brands: [
-                { brand: 'Google Chrome',  version: _chromeMajor },
-                { brand: 'Chromium',       version: _chromeMajor },
-                { brand: 'Not(A:Brand',    version: '8' },
-              ],
+              brands: ${brands},
               mobile: false,
-              platform: 'macOS',
-              platformVersion: '15.3.0',
-              architecture: 'arm',
-              bitness: '64',
-              model: '',
-              uaFullVersion: _chromeVersion,
-              fullVersionList: [
-                { brand: 'Google Chrome',  version: _chromeVersion },
-                { brand: 'Chromium',       version: _chromeVersion },
-                { brand: 'Not(A:Brand',    version: '8.0.0.0' },
-              ],
+              platform: ${JSON.stringify(profile.clientHints.platform)},
+              platformVersion: ${JSON.stringify(profile.clientHints.platformVersion)},
+              architecture: ${JSON.stringify(profile.clientHints.architecture)},
+              bitness: ${JSON.stringify(profile.clientHints.bitness)},
+              model: ${JSON.stringify(profile.clientHints.model)},
+              uaFullVersion: ${JSON.stringify(profile.clientHints.uaFullVersion)},
+              fullVersionList: ${fullVersionList},
             });
           },
           toJSON: function() {
@@ -387,8 +390,14 @@ export class StealthManager {
    * Phase 5: includes canvas, WebGL, audio, font, and timing fingerprint protection.
    * @param seed - Deterministic seed for consistent noise per session
    */
-  static getStealthScript(seed: string = 'tandem-default-seed', chromeVersion: string = process.versions.chrome): string {
-    const chromeMajor = chromeVersion.split('.')[0];
+  static getStealthScript(
+    seed: string = 'tandem-default-seed',
+    chromeVersion: string = process.versions.chrome,
+    stealthUa: StealthUaAdapter = createDarwinStealthUaAdapter(),
+  ): string {
+    const profile = stealthUa.getProfile(chromeVersion);
+    const brands = JSON.stringify(profile.clientHints.brands);
+    const fullVersionList = JSON.stringify(profile.clientHints.fullVersionList);
     return `
       // ═══ All stealth patches in one IIFE — no globals leaked to window ═══
       // Idempotency guard: both the session preload and the dom-ready injection
@@ -652,38 +661,24 @@ export class StealthManager {
       // header — Cloudflare cross-checks them.  Chromium 120+ uses "Not(A:Brand"
       // version "8".  The header handler (registerWith) preserves this naturally.
       {
-        var __chromeMajor = '${chromeMajor}';
-        var __chromeVersion = '${chromeVersion}';
         // Chrome 120+ GREASE brand — must stay in sync with the sec-ch-ua header
         var __greaseBrand   = 'Not(A:Brand';
         var __greaseVersion = '8';
         Object.defineProperty(navigator, 'userAgentData', {
           get: () => ({
-            brands: [
-              { brand: 'Google Chrome',  version: __chromeMajor },
-              { brand: 'Chromium',       version: __chromeMajor },
-              { brand: __greaseBrand,    version: __greaseVersion },
-            ],
+            brands: ${brands},
             mobile: false,
-            platform: 'macOS',
+            platform: ${JSON.stringify(profile.clientHints.platform)},
             getHighEntropyValues: (hints) => Promise.resolve({
-              brands: [
-                { brand: 'Google Chrome',  version: __chromeMajor },
-                { brand: 'Chromium',       version: __chromeMajor },
-                { brand: __greaseBrand,    version: __greaseVersion },
-              ],
+              brands: ${brands},
               mobile: false,
-              platform: 'macOS',
-              platformVersion: '15.3.0',
-              architecture: 'arm',
-              bitness: '64',
-              model: '',
-              uaFullVersion: __chromeVersion,
-              fullVersionList: [
-                { brand: 'Google Chrome',  version: __chromeVersion },
-                { brand: 'Chromium',       version: __chromeVersion },
-                { brand: __greaseBrand,    version: __greaseVersion + '.0.0.0' },
-              ],
+              platform: ${JSON.stringify(profile.clientHints.platform)},
+              platformVersion: ${JSON.stringify(profile.clientHints.platformVersion)},
+              architecture: ${JSON.stringify(profile.clientHints.architecture)},
+              bitness: ${JSON.stringify(profile.clientHints.bitness)},
+              model: ${JSON.stringify(profile.clientHints.model)},
+              uaFullVersion: ${JSON.stringify(profile.clientHints.uaFullVersion)},
+              fullVersionList: ${fullVersionList},
             }),
             toJSON: function() {
               return { brands: this.brands, mobile: this.mobile, platform: this.platform };
