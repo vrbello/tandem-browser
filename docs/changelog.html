@@ -111,10 +111,31 @@ footer a:hover{color:var(--text2)}
 </div>
 
 <div class="preview-banner">
-<div class="preview-banner-inner"><strong>Note:</strong> Tandem Browser is in active development preview (v1.0.0). Releases ship frequently; expect rough edges, breaking changes between minor versions, and rapid iteration on the agent and security layers.</div>
+<div class="preview-banner-inner"><strong>Note:</strong> Tandem Browser is in active development preview (v1.10.0). Releases ship frequently; expect rough edges, breaking changes between minor versions, and rapid iteration on the agent and security layers.</div>
 </div>
 
 <main>
+
+<article class="release" id="v1.10.0">
+<header class="release-head">
+<h2><a href="#v1.10.0">v1.10.0 — Windows support release</a></h2>
+<div class="release-meta">v1.10.0 &middot; 2026-05-05 &middot; <a href="https://github.com/hydro13/tandem-browser/releases/tag/v1.10.0">View on GitHub &rarr;</a></div>
+</header>
+<div class="release-body">
+<p>Tandem Browser now supports Windows 11 x64 with official unsigned installer and portable builds, required Windows CI, and startup smoke coverage that boots the app and verifies the local API reaches <code>/status</code>.</p>
+<h4>Windows downloads</h4>
+<ul>
+  <li><strong>Official Windows x64 installer and portable builds</strong> — the Windows artifacts are official Tandem Browser downloads, but they are currently unsigned. Windows may show an unknown publisher or SmartScreen warning during installation. Code signing is planned, but unsigned status does not make the Windows build unsupported.</li>
+  <li><strong>Required Windows CI</strong> — <code>Verify (windows-latest)</code> now blocks merges alongside macOS, and startup smoke coverage runs on both platforms.</li>
+  <li><strong>Release metadata</strong> — GitHub release assets include SHA256 checksums and an unsigned-build notice. Windows signing identity is currently <code>unsigned</code>.</li>
+</ul>
+<h4>Known follow-ups</h4>
+<ul>
+  <li>Windows system-audio capture remains a known follow-up from the Phase 11 spike.</li>
+  <li>Code signing and end-to-end automatic update installation remain planned hardening work.</li>
+</ul>
+</div>
+</article>
 
 <article class="release" id="v1.0.0">
 <header class="release-head">

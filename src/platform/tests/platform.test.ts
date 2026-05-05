@@ -78,11 +78,13 @@ describe('selectPlatform', () => {
 
     expect(platform.id).toBe('win32');
     expect(platform.process.isWindows()).toBe(true);
-    expect(platform.capabilities.capabilities.appStartup.status).toBe('unsupported');
+    expect(platform.capabilities.tier).toBe('tier1-required');
+    expect(platform.capabilities.capabilities.appStartup.status).toBe('supported');
     expect(platform.capabilities.capabilities.windowChrome.status).toBe('supported');
     expect(platform.capabilities.capabilities.userDataDirectory.status).toBe('supported');
     expect(platform.capabilities.capabilities.nativeMessagingHostDetection.status).toBe('supported');
     expect(platform.capabilities.capabilities.voiceTranscription.status).toBe('partial');
+    expect(platform.capabilities.capabilities.secretsAtRest.status).toBe('supported');
     expect(() => platform.chromeImport.getUnavailableStatus()).not.toThrow();
     expect(() => platform.nativeMessaging.createDetectionAdapter().getNativeMessagingDirs()).not.toThrow();
     expect(() => platform.voice.detectBackend()).not.toThrow();

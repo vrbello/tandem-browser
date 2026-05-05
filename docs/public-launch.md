@@ -31,10 +31,13 @@ not a bet on waiting for every site to become agent-ready. Tandem Browser is the
 browser layer where humans and agents can work together on the web that already
 exists.
 
-This is a public developer preview, not a polished end-user release yet.
-macOS is the primary platform today, Linux is secondary, and there are still
-known rough edges in some workflows. But the core repo, API surface, test
-baseline, and product direction are now ready for public review.
+This is a public developer preview, not a polished mass-market release yet.
+macOS Apple Silicon and Windows 11 x64 are supported platforms, Linux is
+best-effort, and there are still known rough edges in some workflows. Windows
+installers are official Tandem Browser downloads but currently unsigned, so
+Windows may show an unknown publisher or SmartScreen warning during install.
+But the core repo, API surface, test baseline, CI coverage, and product
+direction are now ready for public review.
 
 The point of publishing this is also to let other contributors help improve the
 browser. If you care about agent workflows, local-first browsing, MCP tooling, security,
