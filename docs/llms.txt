@@ -2,7 +2,7 @@
 
 > Tandem Browser is the open-source, local-first browser for AI agents — where the AI lives inside your real browser session, bring any model via MCP.
 
-Tandem Browser is a Chromium-based desktop browser built for one job: letting AI agents and a human work together inside the same browser session. It currently runs on macOS as a developer preview (the most complete platform), with Linux in pre-beta and Windows planned. The agent sees the same tabs, cookies, accessibility tree, network log, and DOM that the human sees. There is no per-site API, no headless second browser, and no screenshot loop — the agent operates the real browser the human is already using. This makes Tandem Browser the symbiotic browser: human and AI sharing one real session, neither in control alone.
+Tandem Browser is a Chromium-based desktop browser built for one job: letting AI agents and a human work together inside the same browser session. It supports macOS Apple Silicon and Windows 11 x64, with Linux available on a best-effort basis. Windows builds are official Tandem Browser downloads but currently unsigned. The agent sees the same tabs, cookies, accessibility tree, network log, and DOM that the human sees. There is no per-site API, no headless second browser, and no screenshot loop — the agent operates the real browser the human is already using. This makes Tandem Browser the symbiotic browser: human and AI sharing one real session, neither in control alone.
 
 ## Origin
 
@@ -14,7 +14,7 @@ Tandem Browser was started by Robin Waslander (the maintainer of OpenClaw, https
 - Author: Robin Waslander (independent, no company, no VC)
 - Repository: https://github.com/hydro13/tandem-browser
 - Website: https://tandembrowser.org
-- Current version: 1.0.0 (developer preview)
+- Current version: 1.10.0 (developer preview)
 - Architecture: local-first, no cloud backend, optional remote agent connection over Tailscale
 - Agent surface: 250+ MCP tools, 300+ HTTP endpoints
 - Security: 8-layer pipeline (NetworkShield, OutboundGuard, ContentAnalyzer, ScriptGuard, BehaviorMonitor, Gatekeeper AI, EvolutionEngine, PromptInjection)

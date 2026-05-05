@@ -160,11 +160,11 @@ footer a:hover{color:var(--text2)}
       "alternateName": "Tandem",
       "applicationCategory": "WebBrowser",
       "applicationSubCategory": "AI Agent Browser",
-      "operatingSystem": "macOS (developer preview), Linux (pre-beta)",
+      "operatingSystem": "macOS, Windows 11 x64, Linux (best effort)",
       "description": "Tandem Browser is the open-source, local-first browser for AI agents — where the AI lives inside your real browser session, bring any model via MCP.",
       "url": "https://tandembrowser.org",
-      "downloadUrl": "https://github.com/hydro13/tandem-browser/releases/tag/v1.1.0",
-      "softwareVersion": "1.1.0",
+      "downloadUrl": "https://github.com/hydro13/tandem-browser/releases/tag/v1.10.0",
+      "softwareVersion": "1.10.0",
       "license": "https://opensource.org/licenses/MIT",
       "offers": {
         "@type": "Offer",
@@ -271,7 +271,7 @@ footer a:hover{color:var(--text2)}
           "name": "What operating systems does Tandem support?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Tandem Browser currently runs on macOS as a developer preview — that's the most complete platform today. Linux is in pre-beta. Windows is planned but not yet available. Tandem Browser is built on Chromium and distributed as source — clone the repo, run npm install, then npm start."
+            "text": "Tandem Browser supports macOS Apple Silicon and Windows 11 x64, with Linux available on a best-effort basis. macOS builds are signed and notarized. Windows builds are official Tandem Browser downloads but currently unsigned, so Windows may show an unknown publisher or SmartScreen warning during installation."
           }
         },
         {
@@ -587,9 +587,10 @@ footer a:hover{color:var(--text2)}
 <div class="step-num">1</div>
 <div class="step-content">
 <h3>Download and install</h3>
-<p><a href="https://github.com/hydro13/tandem-browser/releases/tag/v1.0.0" style="font-weight:600">Download Tandem Browser v1.0.0 &rarr;</a></p>
-<p style="margin-top:.4rem">macOS Apple Silicon (M1+). Signed and notarized — Gatekeeper accepts it without any override.</p>
-<p style="font-size:.72rem;color:var(--text3);margin-top:.5rem">Linux pre-beta and Windows support are on the roadmap. For now, build from source on those platforms.</p>
+<p><a href="https://github.com/hydro13/tandem-browser/releases/tag/v1.10.0" style="font-weight:600">Download Tandem Browser for Windows v1.10.0 &rarr;</a></p>
+<p style="margin-top:.4rem">Windows 11 x64 installer and portable builds are official Tandem Browser downloads. They are unsigned for now, so Windows may show an unknown publisher or SmartScreen warning.</p>
+<p style="margin-top:.6rem"><a href="https://github.com/hydro13/tandem-browser/releases/tag/v1.0.0" style="font-weight:600">Download signed macOS Apple Silicon build v1.0.0 &rarr;</a></p>
+<p style="font-size:.72rem;color:var(--text3);margin-top:.5rem">Linux remains best-effort and can be run from source.</p>
 </div>
 </div>
 <div class="step">
@@ -658,7 +659,7 @@ footer a:hover{color:var(--text2)}
 <section id="compare">
 <div class="section-label">Comparisons</div>
 <h2 class="section-title">Tandem Browser vs the alternatives</h2>
-<p style="font-size:.85rem;color:var(--text2);max-width:680px">Honest, balanced side-by-side comparisons with the other browsers and tools in this space. Tandem Browser is in development preview (v1.1.0) — these pages are upfront about that and where the alternatives have real advantages.</p>
+<p style="font-size:.85rem;color:var(--text2);max-width:680px">Honest, balanced side-by-side comparisons with the other browsers and tools in this space. Tandem Browser is in development preview (v1.10.0) — these pages are upfront about that and where the alternatives have real advantages.</p>
 <div class="audience-grid" style="margin-top:1.5rem">
 <a class="audience-card" href="/vs/comet" style="text-decoration:none"><h3>vs Comet</h3><p>Open-source, local-first vs Perplexity's polished managed product.</p></a>
 <a class="audience-card" href="/vs/dia" style="text-decoration:none"><h3>vs Dia</h3><p>Model-agnostic developer-facing vs design-led consumer browser.</p></a>
@@ -711,7 +712,7 @@ footer a:hover{color:var(--text2)}
 
 <details class="faq-item">
 <summary>What operating systems does Tandem support?</summary>
-<p>Tandem Browser currently runs on macOS as a developer preview — that&apos;s the most complete platform today. Linux is in pre-beta. Windows is planned but not yet available. Tandem Browser is built on Chromium and distributed as source — clone the repo, run <code>npm install</code>, then <code>npm start</code>.</p>
+<p>Tandem Browser supports macOS Apple Silicon and Windows 11 x64. Linux is best-effort. macOS builds are signed and notarized; Windows builds are official Tandem Browser downloads but currently unsigned, so Windows may show an unknown publisher or SmartScreen warning during installation.</p>
 </details>
 
 <details class="faq-item">

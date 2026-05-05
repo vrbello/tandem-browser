@@ -156,9 +156,17 @@ For the longer version, see [docs/tandem-browser-vs-webmcp.md](docs/tandem-brows
 
 That's it. Tandem publishes its own bootstrap surface — the agent reads `/agent` and connects automatically.
 
+**Windows 11 x64** — download the installer or portable build:
+
+**[Download Tandem Browser v1.10.0 →](https://github.com/hydro13/tandem-browser/releases/tag/v1.10.0)**
+
+Windows builds are official Tandem Browser downloads, but they are currently
+unsigned. Windows may show an unknown publisher or SmartScreen warning during
+install. Code signing is planned, but Windows is supported now.
+
 ### Building from source
 
-For Linux, Windows, or if you want to hack on Tandem itself:
+For Linux, Windows, macOS, or if you want to hack on Tandem itself:
 
 ```bash
 git clone https://github.com/hydro13/tandem-browser.git
@@ -167,13 +175,13 @@ npm install
 npm start
 ```
 
-macOS is the primary platform. Linux works. Windows is validated as a remote agent host.
+macOS and Windows are supported platforms. Linux is best-effort.
 
 ## Start Here
 
 Depending on what you want to do:
 
-- **Install Tandem** -> [Download v1.0.0](https://github.com/hydro13/tandem-browser/releases/tag/v1.0.0) (macOS) or follow Quick Start above
+- **Install Tandem** -> download [macOS v1.0.0](https://github.com/hydro13/tandem-browser/releases/tag/v1.0.0) or [Windows v1.10.0](https://github.com/hydro13/tandem-browser/releases/tag/v1.10.0), or follow Quick Start above
 - **Connect an agent** -> see [Connect Your AI Agent](#connect-your-ai-agent)
 - **Explore the API and docs** -> browse [docs/](docs/) and [docs/INDEX.md](docs/INDEX.md)
 - **See the product story and website** -> visit [tandembrowser.org](https://tandembrowser.org)
@@ -355,10 +363,10 @@ contributors, not yet a polished mass-user release.
 
 ![Tandem Browser — browsing](docs/screenshots/tandem-browser-interaction.png)
 
-- Primary platform: macOS
+- Primary platform: macOS Apple Silicon
+- Supported platform: Windows 11 x64
 - Secondary platform: Linux
-- Windows: validated as a remote agent host (VS Code + Claude Code over Tailscale)
-- Binaries: signed & notarized macOS Apple Silicon builds published on [GitHub Releases](https://github.com/hydro13/tandem-browser/releases), starting at v1.0.0
+- Binaries: signed and notarized macOS Apple Silicon builds plus unsigned Windows x64 installer/portable builds on [GitHub Releases](https://github.com/hydro13/tandem-browser/releases), starting with Windows in v1.10.0
 - Current version: `1.10.0`
 - Package metadata: [package.json](package.json)
 

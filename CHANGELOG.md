@@ -4,37 +4,27 @@ All notable changes to Tandem Browser will be documented in this file.
 
 ## Unreleased
 
-### Chore
-
-- chore: Promote the Windows verify matrix job from best-effort to blocking
-  while leaving Linux as the only non-blocking verify platform.
-
-### Test
-
-- test: Add a Node startup smoke runner that boots Tandem through the
-  cross-platform startup helper, polls `http://127.0.0.1:8765/status`, and runs
-  in GitHub Actions on Windows and macOS.
-
-### Changed
-
-- chore: Add a separate Windows release-build workflow that runs on manual
-  dispatch or version tags, builds unsigned x64 NSIS and portable artifacts on a
-  Windows runner, and uploads them only as short-lived GitHub Actions workflow
-  artifacts while signing remains deferred.
-- chore: Add unsigned local Windows electron-builder targets for x64 NSIS and
-  portable artifacts with target-specific `setup` and `portable` artifact
-  names, while leaving the existing macOS packaging config unchanged.
+No unreleased changes yet.
 
 ## [v1.10.0] - 2026-05-05
 
-Windows support Phase 15. Tandem now has a Windows-only manual update path that
-checks GitHub Releases through `electron-updater`, lets the user choose whether
-to download an available update, and only installs after an explicit restart
-confirmation. Production Windows auto-update remains blocked until Windows
-installers are signed and an end-to-end update installation is verified.
+Windows support release. Tandem Browser now supports Windows 11 x64 with
+official unsigned installer and portable builds, required Windows CI, and a
+startup smoke test that verifies the local API reaches `/status`.
+
+The Windows builds are official Tandem Browser downloads, but they are not code
+signed yet. Windows may show an unknown publisher or SmartScreen warning during
+installation. Code signing is planned, but unsigned status does not make the
+Windows build unsupported.
 
 ### Added
 
+- **Official Windows downloads** (`.github/workflows/release-win.yml`) - version
+  tags now publish unsigned Windows x64 setup and portable assets to GitHub
+  Releases with SHA256 checksums and an unsigned-build notice.
+- **Windows startup smoke coverage** (`tests/smoke/startup-smoke.js`) - boots
+  Tandem through the cross-platform startup helper and polls
+  `http://127.0.0.1:8765/status`.
 - **Windows updater adapter** (`src/platform/updates/`) - adds a Windows-gated
   `electron-updater` integration with `autoDownload` and automatic install on
   quit disabled.
@@ -50,18 +40,23 @@ installers are signed and an end-to-end update installation is verified.
 - **Version references** (`package.json`, `package-lock.json`, `README.md`,
   `PROJECT.md`, `docs/index.html`) - bumped Tandem Browser to `1.10.0`.
 - **Platform support tracking** (`docs/platform-support.md`,
-  `src/platform/capabilities.ts`) - records Windows auto-update as partial
-  until signed Windows releases and end-to-end update installation are verified.
+  `src/platform/capabilities.ts`) - promotes Windows 11 x64 to a required,
+  supported platform while keeping Linux best-effort.
+- **Windows verify policy** (`.github/workflows/verify.yml`) - Windows verify is
+  now blocking alongside macOS; Linux remains non-blocking.
+- **Public platform docs** (`README.md`, `docs/`) - announce Windows support and
+  document the current unsigned installer status.
 
 ### Technical Details
 
 - The updater module lives behind the platform adapter boundary; macOS update
   behavior and macOS release configuration are untouched.
-- The Windows release workflow still uses `--publish never`; it uploads
-  `latest.yml` as a short-lived GitHub Actions artifact only and does not create
-  or publish a GitHub Release.
-- Windows update signature verification is not disabled. Unsigned artifacts are
-  not production-ready update payloads.
+- The Windows release workflow still builds with `--publish never` and uploads
+  assets to GitHub Releases explicitly through `gh release`, so no old local
+  `release/` artifacts are reused.
+- GitHub release assets include `SHA256SUMS.txt`; Windows signing identity is
+  currently `unsigned`.
+- Windows system-audio capture remains a known follow-up from Phase 11.
 
 ## [v1.9.0] - 2026-05-04
 

@@ -66,6 +66,7 @@ Last updated: May 5, 2026
 - [x] Add GitHub Actions verification for `npm run verify` on pushes and pull requests
 - [x] Add Windows and macOS startup smoke coverage in GitHub Actions by booting Tandem and polling `http://127.0.0.1:8765/status`
 - [x] Promote Windows `Verify (windows-latest)` to a blocking GitHub Actions check; Linux remains best-effort
+- [x] Announce Windows 11 x64 as an officially supported platform with unsigned installer and portable GitHub Release assets
 - [ ] Remove deprecated voice-transcription and live-mode main-process code after the shell-side cleanup lands (PR #TBD): preload bindings `window.tandem.transcribeAudio` and `window.tandem.onLiveModeChanged`, IPC handlers, HTTP route `POST /live/toggle` on port 8765, audio transcription pipeline, and MCP tools `tandem_live_toggle`, `tandem_live_status`, `tandem_audio_start`, `tandem_audio_stop`, `tandem_audio_status`, `tandem_audio_recordings`. The shell no longer references any of these.
 - [ ] Restore image support in Wingman chat by routing image sends through the OpenClaw gateway. The legacy `GET/POST /chat` polling bridge was disabled on 17 March 2026 (commit `ede27d82`) and text sends were migrated to the gateway WebSocket, but the image path was not. Today `IpcChannels.CHAT_SEND_IMAGE` in `src/ipc/handlers.ts` only saves the base64 to `~/.tandem/chat-images/` and fires `PanelManager.fireWebhook()` with a `[image attached]` marker — no bytes or URL travel to OpenClaw. Fix: send images through the same gateway path as text (multimodal payload, or upload via `src/api/routes/media.ts` `media-chat-image` bucket and include the URL in the gateway message). Shell-side, collapse `window.tandem.sendChatImage` into `router.sendMessage(text, { image })`.
 
@@ -74,7 +75,7 @@ Last updated: May 5, 2026
 ### Distribution and UX
 
 - [ ] Full multi-profile UX on top or the existing `SessionManager` isolation model
-- [ ] Windows auto-update production readiness: Phase 15 added the Windows-only manual `electron-updater` check path and `latest.yml` workflow metadata, but real user update installation remains blocked until signed Windows installers are published through GitHub Releases and end-to-end update installation is verified.
+- [ ] Windows signing and auto-update production readiness: Windows installer and portable builds are official but currently unsigned; code signing and end-to-end automatic update installation validation remain follow-up work.
 - [ ] Production-ready DMG build for macOS with current naming and metadata
 - [ ] AppImage build for Linux
 - [ ] Documentation site

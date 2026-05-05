@@ -7,7 +7,7 @@ on:
       - 'v*'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-unsigned-windows:
@@ -77,12 +77,91 @@ jobs:
 
           Status: unsigned
           Code signing: deferred
-          Distribution: GitHub Actions workflow artifact only
+          Distribution: official GitHub Release assets on version tags, GitHub Actions workflow artifacts on manual runs
           Auto-update feed: generated for validation only, not published
 
-          These artifacts are for release-pipeline validation and are not an official public Windows release.
-          Production Windows auto-update remains blocked until Windows code signing is configured and end-to-end update installation is verified.
+          These Windows artifacts are official Tandem Browser downloads. They are intentionally unsigned for now,
+          so Windows may show an "unknown publisher" or SmartScreen warning during installation.
+          Code signing remains planned, but unsigned status does not make the Windows build unsupported.
           '@ | Set-Content -Encoding UTF8 release\UNSIGNED-WINDOWS-BUILD.txt
+
+      - name: Write Windows checksums and release notes
+        shell: pwsh
+        run: |
+          $artifacts = Get-ChildItem release -File | Where-Object {
+            $_.Name -like 'tandem-browser-*-x64-setup.exe' -or
+            $_.Name -like 'tandem-browser-*-x64-setup.exe.blockmap' -or
+            $_.Name -like 'tandem-browser-*-x64-portable.exe' -or
+            $_.Name -eq 'latest.yml' -or
+            $_.Name -eq 'UNSIGNED-WINDOWS-BUILD.txt'
+          } | Sort-Object Name
+
+          $hashLines = foreach ($artifact in $artifacts) {
+            $hash = Get-FileHash -Algorithm SHA256 $artifact.FullName
+            "$($hash.Hash.ToLowerInvariant())  $($artifact.Name)"
+          }
+          $hashLines | Set-Content -Encoding UTF8 release\SHA256SUMS.txt
+
+          $setup = Get-ChildItem release -File -Filter 'tandem-browser-*-x64-setup.exe' | Select-Object -First 1
+          $portable = Get-ChildItem release -File -Filter 'tandem-browser-*-x64-portable.exe' | Select-Object -First 1
+          $version = '${{ github.ref_name }}'
+          $hashBlock = ($hashLines -join "`n")
+
+          @"
+          Tandem Browser $version
+
+          This release makes Tandem Browser available as an official Windows download alongside the existing macOS release path.
+
+          ## Windows downloads
+
+          - Installer: $($setup.Name)
+          - Portable build: $($portable.Name)
+
+          ## Windows signing status
+
+          The Windows artifacts in this release are official Tandem Browser builds, but they are currently unsigned.
+          Windows may show an unknown publisher or SmartScreen warning during installation. Code signing is planned,
+          but unsigned status does not make the Windows build unsupported.
+
+          ## SHA256 checksums
+
+          ````text
+          $hashBlock
+          ````
+
+          ## Notes
+
+          - Windows 11 x64 is now a supported Tandem Browser platform.
+          - Windows verify and startup smoke checks are required in CI.
+          - Windows system-audio capture remains a known follow-up; the browser and installer are supported.
+          "@ | Set-Content -Encoding UTF8 release\WINDOWS-RELEASE-NOTES.md
+
+      - name: Publish Windows assets to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = '${{ github.ref_name }}'
+          $assetPatterns = @(
+            'release\tandem-browser-*-x64-setup.exe',
+            'release\tandem-browser-*-x64-setup.exe.blockmap',
+            'release\tandem-browser-*-x64-portable.exe',
+            'release\latest.yml',
+            'release\SHA256SUMS.txt',
+            'release\UNSIGNED-WINDOWS-BUILD.txt'
+          )
+          $assets = foreach ($pattern in $assetPatterns) {
+            Get-ChildItem $pattern | ForEach-Object { $_.FullName }
+          }
+
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release edit $tag --title "Tandem Browser $tag" --notes-file release\WINDOWS-RELEASE-NOTES.md --latest
+            gh release upload $tag @assets --clobber
+          } else {
+            gh release create $tag @assets --title "Tandem Browser $tag" --notes-file release\WINDOWS-RELEASE-NOTES.md --latest
+          }
 
       - name: Upload unsigned Windows artifacts
         uses: actions/upload-artifact@v4
@@ -95,4 +174,5 @@ jobs:
             release/tandem-browser-*-x64-setup.exe.blockmap
             release/tandem-browser-*-x64-portable.exe
             release/latest.yml
+            release/SHA256SUMS.txt
             release/UNSIGNED-WINDOWS-BUILD.txt
